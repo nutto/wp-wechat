@@ -1,3 +1,5 @@
+#WordPress 微信插件
+
 >    Plugin Name: EC-WeChat
 >    Plugin URI:  http://http://www.easecloud.cn/
 >    Description: This Plugin is designed for using wechat API more conveniently
@@ -7,7 +9,7 @@
 >    License:     GPL3
 >    License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-** 本接口旨在帮助用户快速构建,解析和发送微信接口中的消息数据,对于接口的返回和错误不作处理 **
+__ 本接口旨在帮助用户快速构建,解析和发送微信接口中的消息数据,对于接口的返回和错误不作处理 __
 
 
 ##获取access token和确保access token的可用性
@@ -20,7 +22,7 @@
 
 * 当 ``` EC_Wechat ``` 类被实例化的时候会确保access token的可用性[注]
 
-** [注]:可用性是通过比较获取access token时返回的时间和时限来确保,如果在一个access token的有效期内通过其他方法获取了新的access token将会导致程序错误 **
+__ [注]:可用性是通过比较获取access token时返回的时间和时限来确保,如果在一个access token的有效期内通过其他方法获取了新的access token将会导致程序错误 __
 
 
 ##检测消息可靠性和响应服务器验证请求
