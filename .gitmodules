@@ -1,0 +1,3 @@
+[submodule "wechat-php-sdk"]
+	path = wechat-php-sdk
+	url = https://github.com/dodgepudding/wechat-php-sdk.git
