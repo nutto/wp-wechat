@@ -582,7 +582,9 @@ object(stdClass)[131]
 可以通过 ``` gs_preview($user, $type, $mix_content, $use_name = false, $card_info = array()) ``` 预览消息
 
 ``` $mix_content ``` 会根据 ``` $type ``` 的不同而表现出不同的意义
+
 ``` $use_name ``` 决定 ``` $user ``` 参数代表的意义  true:为openId    false:为微信号
+
 如果要预览卡券信息要填写 ``` $card_info ``` ,格式应该像下面一样的数组
 
 ```
@@ -602,7 +604,7 @@ $card_info = array(
 $response = $ec_wechat->gs_preview('oJfmdsyxnpXQJiKCkpnJ4fIKHLrs', 'mpnews', 'cNh_wZsQfAzjcy_ZK-YUXdQMxF7fQ8fT7bSftlgxGxqKRohUbj8q4G3238hBMyft');
 ```
 
-预览一个图文
+预览一个音频
 
 ```
 $response = $ec_wechat->gs_preview('oJfmdsyxnpXQJiKCkpnJ4fIKHLrs', 'voice', 'Z74wZErTH4tcvRoGDjIIMfbtIMkbKMEJ5l67DmUSo06bJNemgmRJIFbPV-vVfRVS');
