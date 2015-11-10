@@ -56,6 +56,16 @@ add_action('admin_menu', function () {
                 <?php do_settings_sections('options-wechat'); ?>
                 <?php submit_button(); ?>
             </form>
+            <!-- TODO: 临时菜单配置 -->
+            <?php $wx = new WP_Wechat(); ?>
+            <h2>微信菜单设置</h2>
+            <form method="post" id="form_wechat_menu">
+                <textarea style="width: 100%" rows="8" id="wechat_menu" name="wechat_menu"><?=$wx->_json_encode_dealer($wx->get_menu());?></textarea>
+                <?php if($_POST) {
+                    var_dump($wx->create_menu(json_decode(wp_unslash($_POST['wechat_menu']))->menu->button));
+                } ?>
+                <?php submit_button(); ?>
+            </form>
         </div><?php
     }
 

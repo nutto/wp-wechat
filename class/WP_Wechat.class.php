@@ -408,7 +408,7 @@ class WP_Wechat {
         );
         // 如果是视频要加上description字段
         if($type == 'video') {
-            $data['description'] = json_encode(array(
+            $data['description'] = $this->_json_encode_dealer(array(
                 'title'         => $title,
                 'introduction'  => $introduction,
             ));
@@ -453,7 +453,7 @@ class WP_Wechat {
                     'access_token'  => $this->access_token,
                 ),
                 'https://api.weixin.qq.com/cgi-bin/material/add_news'),
-            json_encode(array( 'articles'  => $articles )),
+            $this->_json_encode_dealer(array( 'articles'  => $articles )),
             'POST'
         ));
     }
@@ -491,7 +491,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/get_material'),
-            json_encode(array( 'media_id'  => $media_id, )),
+            $this->_json_encode_dealer(array( 'media_id'  => $media_id, )),
             'POST'
         );
     }
@@ -510,7 +510,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/del_material'),
-            json_encode(array( 'media_id'  => $media_id )),
+            $this->_json_encode_dealer(array( 'media_id'  => $media_id )),
             'POST'
         ));
     }
@@ -531,7 +531,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/update_news'),
-            json_encode(array(
+            $this->_json_encode_dealer(array(
                 'media_id'  => $media_id,
                 'index'     => $index,
                 'articles'  => $article,
@@ -572,7 +572,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/batchget_material'),
-            json_encode(array(
+            $this->_json_encode_dealer(array(
                 'type'  => $type,
                 'offset'     => $offset,
                 'count'  => $count,
@@ -595,7 +595,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/create'),
-                json_encode(array( 'group'  => array( 'name'  => $name, ))),
+                $this->_json_encode_dealer(array( 'group'  => array( 'name'  => $name, ))),
             'POST'
         ));
     }
@@ -615,7 +615,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/getid'),
-            json_encode(array('openid' => $openid)),
+            $this->_json_encode_dealer(array('openid' => $openid)),
             'POST'
         ));
     }
@@ -635,7 +635,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/update'),
-            json_encode(array( 'group'  => array('id' => $group_id, 'name'  => $name))),
+            $this->_json_encode_dealer(array( 'group'  => array('id' => $group_id, 'name'  => $name))),
             'POST'
         ));
     }
@@ -655,7 +655,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/members/update'),
-            json_encode(array( 'openid'  => $openid, 'to_groupid' => $to_groupid)),
+            $this->_json_encode_dealer(array( 'openid'  => $openid, 'to_groupid' => $to_groupid)),
             'POST'
         ));
     }
@@ -675,7 +675,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/members/batchupdate'),
-            json_encode(array( 'openid'  => $openid_list, 'to_groupid' => $to_groupid)),
+            $this->_json_encode_dealer(array( 'openid'  => $openid_list, 'to_groupid' => $to_groupid)),
             'POST'
         ));
     }
@@ -694,7 +694,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/delete'),
-            json_encode(array( 'group'  => array('id' => $group_id))),
+            $this->_json_encode_dealer(array( 'group'  => array('id' => $group_id))),
             'POST'
         ));
     }
@@ -714,7 +714,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/user/info/updateremark'),
-            json_encode(array( 'openid'  => $openid, 'remark' => $remark)),
+            $this->_json_encode_dealer(array( 'openid'  => $openid, 'remark' => $remark)),
             'POST'
         ));
     }
@@ -769,7 +769,7 @@ class WP_Wechat {
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/user/info/batchget'),
-            json_encode(array('user_list' => $user_list)),
+            $this->_json_encode_dealer(array('user_list' => $user_list)),
             'POST'
         ));
     }
@@ -825,7 +825,7 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/media/uploadnews'),
-            json_encode(array('articles' => $articles)),
+            $this->_json_encode_dealer(array('articles' => $articles)),
             'POST'
         ));
     }
@@ -847,7 +847,7 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://file.api.weixin.qq.com/cgi-bin/media/uploadvideo'),
-            json_encode(array(
+            $this->_json_encode_dealer(array(
                 'media_id' => $media_id,
                 'title' => $title,
                 'description' => $description,
@@ -870,7 +870,7 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/delete'),
-            json_encode(array( 'msg_id' => $msg_id, )),
+            $this->_json_encode_dealer(array( 'msg_id' => $msg_id, )),
             'POST'
         ));
     }
@@ -889,7 +889,7 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/get'),
-            json_encode(array( 'msg_id' => $msg_id, )),
+            $this->_json_encode_dealer(array( 'msg_id' => $msg_id, )),
             'POST'
         ));
     }
@@ -938,7 +938,7 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/sendall'),
-            json_encode($data),
+            $this->_json_encode_dealer($data),
             'POST'
         ));
     }
@@ -983,9 +983,19 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/send'),
-            json_encode($data),
+            $this->_json_encode_dealer($data),
             'POST'
         ));
+    }
+
+    /**
+     * @param $data
+     * @return mixed|string|void
+     *
+     * 对Json编码的特殊处理函数
+     */
+    public function _json_encode_dealer($data) {
+        return json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -1037,14 +1047,14 @@ class WP_Wechat {
                 break;
             case 'wxcard':
                 $data['wxcard'] = array('card_id'  => $mix_content);
-                $data['wxcard'] = array('card_ext'  => json_encode($card_info));
+                $data['wxcard'] = array('card_ext'  => $this->_json_encode_dealer($card_info));
                 break;
         }
         return json_decode($this->_request_api(
             add_query_arg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/preview'),
-            json_encode($data),
+            $this->_json_encode_dealer($data),
             'POST'
         ));
     }
@@ -1062,7 +1072,7 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/menu/create'),
-            json_encode(array( 'button' => $menu, )),
+            $this->_json_encode_dealer(array( 'button' => $menu, )),
             'POST'
         ));
     }
