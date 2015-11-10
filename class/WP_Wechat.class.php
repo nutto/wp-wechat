@@ -1048,5 +1048,68 @@ class WP_Wechat {
             'POST'
         ));
     }
+
+    /**
+     * @param $menu
+     * @return array|mixed|object
+     *
+     * 新增自定义菜单
+     *
+     * url:http://mp.weixin.qq.com/wiki/6/95cade7d98b6c1e1040cde5d9a2f9c26.html
+     */
+    public function create_menu($menu) {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/cgi-bin/menu/create'),
+            json_encode(array( 'button' => $menu, )),
+            'POST'
+        ));
+    }
+
+    /**
+     * @return array|mixed|object
+     *
+     * 自定义菜单查询接口
+     *
+     * url:http://mp.weixin.qq.com/wiki/2/07112acf4bb9a19d50c8ae08515a2a6a.html
+     */
+    public function get_menu() {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/cgi-bin/menu/get')
+        ));
+    }
+
+    /**
+     * @return array|mixed|object
+     *
+     * 自定义菜单删除接口
+     *
+     * url:http://mp.weixin.qq.com/wiki/11/51aa2be3cc267a4947216a44b2e25187.html
+     */
+    public function del_menu() {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/cgi-bin/menu/delete')
+        ));
+    }
+
+    /**
+     * @return array|mixed|object
+     *
+     * 获取自定义菜单配置接口
+     *
+     * url:http://mp.weixin.qq.com/wiki/6/51671aa8efcd21493b8a8f505c288706.html
+     */
+    public function get_current_menu() {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/cgi-bin/get_current_selfmenu_info')
+        ));
+    }
 };
 
