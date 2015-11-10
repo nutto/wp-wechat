@@ -9,33 +9,60 @@ class WP_Wechat {
     /**
      * Const settings for the whole plugin.
      */
-    const OPTION_GROUP = 'wp_wechat';
+    static $OPTION_GROUP = 'wp_wechat';
 
-    const OPTION_FIELDS = array(
+    static $OPTION_FIELDS = array(
         'wx_app_id' => array(
             'title' => '微信 APP ID',
-            'description' => '请填写微信公众平台后台获取的 APP ID',
+            'description' => '开发者中心的 APP ID',
         ),
         'wx_app_secret' => array(
-            'title' => '微信 APP Secret'
+            'title' => '微信 APP Secret',
+            'description' => '开发者中心的 APP Secret',
         ),
-        'wx_self_id' => array(),
-        'wx_token' => array(),
-        'wx_encoding_aes_key' => array(),
+        'wx_self_id' => array(
+            'title' => '公众号微信号',
+            'description' => '公众号微信号'
+        ),
+        'wx_token' => array(
+            'title' => 'Token',
+            'description' => '服务器回调验证令牌(可选)'
+        ),
+        'wx_encoding_aes_key' => array(
+            'title' => 'Encoding AES Key',
+            'description' => '消息加解密密钥(可选)'
+        ),
+        'wx_access_token' => array(
+            'title' => 'Access Token',
+            'description' => 'Access Token(系统会自动获取)',
+            'readonly' => true
+        ),
+        'wx_token_expire' => array(
+            'title' => 'Access Token Expire',
+            'description' => 'Access Token有效时长(单位:秒,系统会自动获取)',
+            'readonly' => true
+        ),
+        'wx_token_modified_time' => array(
+            'title' => 'Access Token Modified Time',
+            'description' => '最近一次Access Token获取时间(系统会自动获取)',
+            'readonly' => true
+        ),
+        'wx_app_confirm_identify' => array(
+            'title' => '用户唯一确认标识',
+            'description' => '确认用户身份(系统会自动获取)',
+            'readonly' => true
+        ),
     );
 
     // 微信号
     // option(wx_self_id)
     protected $self_id;
 
-    // 微信配置文件路径
-    protected $wechat_ini_file_path;
-
     // 服务器验证标识
     // option(wx_token)
     protected $token;
 
-    // 消息加密密钥
+    // 消息加解密密钥
     // option(wx_encoding_aes_key)
     protected $encoding_aes_key;
 
@@ -62,35 +89,17 @@ class WP_Wechat {
     function __construct() {
 
         // 获取微信的配置
-        $this->app_id = get_option('wx_app_id');
-        $this->app_secret = get_option('wx_app_secret');
-        $this->self_id = get_option('wx_self_id');
-        $this->token = get_option('wx_token');
-        $this->encoding_aes_key = get_option('wx_encoding_aes_key');
+        $this->app_id = get_option('wx_app_id', null);
+        $this->app_secret = get_option('wx_app_secret', null);
+        $this->self_id = get_option('wx_self_id', null);
+        $this->token = get_option('wx_token', null);
+        $this->encoding_aes_key = get_option('wx_encoding_aes_key', null);
+        $this->access_token = get_option('wx_access_token', null);
+        $this->token_expire = get_option('wx_token_expire', null);
+        $this->token_modified_time = get_option('wx_token_modified_time', null);
 
-        // 获取微信配置文件路径
-        $upload_dir = wp_upload_dir();
-        $this->access_token_file_path = $upload_dir['basedir'].'/wechat-option.ini';
-
-        // 关于access token的信息以文件的形式存放在插件根目录的"wechat-option.ini"文件内
-        // TODO: 此处需要重写，不要写入文件系统里面，直接存放在数据库里面，因为不一定有写入权限
-        if(file_exists($this->access_token_file_path)) {
-            $pre_options = json_decode(file_get_contents($this->access_token_file_path));
-
-            // 要appId和appSecret更新了的话就强制更新Access Token
-            if($pre_options->wx_app_id != $this->app_id || $pre_options->wx_app_secret != $this->app_secret) {
-                $this->_get_access_token();
-            }
-            else {
-                $this->access_token = $pre_options->wx_access_token;
-                $this->token_expire = $pre_options->wx_token_expire;
-                $this->token_modified_time = $pre_options->wx_token_modified_time;
-                $this->ensure_access_token();
-            }
-        }
-        else {
-            $this->_get_access_token();
-        }
+        // 20151109:确保Access Token的有效性
+        $this->ensure_access_token();
     }
 
     /**
@@ -101,7 +110,8 @@ class WP_Wechat {
     public function ensure_access_token() {
         // 没有初始化和超过认证时限都需要重新获取access token
         if(!isset($this->access_token) || !isset($this->token_modified_time) || !isset($this->token_expire) ||
-            (time() - $this->token_modified_time) > ($this->token_expire - 60)) { // 提早60秒获取,避免误差
+            (time() - $this->token_modified_time) > ($this->token_expire - 60) ||   // 提早60秒获取,避免误差
+            get_option('wx_app_confirm_identify') != md5($this->app_id.'|'.$this->app_secret)) {  // 确认用户没有改变
             $this->_get_access_token();
         }
     }
@@ -120,8 +130,8 @@ class WP_Wechat {
      *
      * 根据配置获取access token
      * 不会检查是否有原access token或原access token是否有效
-     * 会强制刷新该用户的access token,并将相关的信息以JSON格式存放在
-     * 插件根目录的"wechat-option.ini"文件内
+     * 会强制刷新该用户的access token,将信息刷新到option中
+     *
      */
     protected function _get_access_token() {
         $url = 'https://api.weixin.qq.com/cgi-bin/token';
@@ -135,26 +145,18 @@ class WP_Wechat {
             throw new Exception('Fail to get Access Token!');
         }
 
-        // 提取access token信息
-        $pre_options['wx_token_modified_time'] = time();
-        $this->token_modified_time = $pre_options['wx_token_modified_time'];
+        // 20151109:更新access token信息
+        $this->token_modified_time = time();
+        update_option('wx_token_modified_time', $this->token_modified_time);
 
-        $pre_options['wx_access_token'] = $token_result->access_token;
-        $this->access_token = $pre_options['wx_access_token'];
+        $this->access_token = $token_result->access_token;
+        update_option('wx_access_token', $this->access_token);
 
-        $pre_options['wx_token_expire'] = $token_result->expires_in;
-        $this->token_expire = $pre_options['wx_token_expire'];
+        $this->token_expire = $token_result->expires_in;
+        update_option('wx_token_expire', $this->token_expire);
 
-        // 记录下appId和appSecret,日后用作更新检测
+        update_option('wx_app_confirm_identify', md5($this->app_id.'|'.$this->app_secret));
 
-        $pre_options['wx_app_id'] = $this->app_id;
-
-        $pre_options['wx_app_secret'] = $this->app_secret;
-
-        // access token信息记录到文件
-        if(file_put_contents($this->access_token_file_path, json_encode($pre_options)) === false) {
-            throw new Exception('Fail to write the "wechat-option.ini" file!');
-        }
         return $this->access_token;
     }
 
@@ -201,10 +203,11 @@ class WP_Wechat {
     }
 
     /**
-     * @return SimpleXMLElement
+     * @return array
      *
+     * 20151109:
      * 接收消息
-     * 监听来自微信的xml请求,返回对象化的xml请求数据
+     * 监听来自微信的xml请求,返回数组化的xml请求数据
      * 键名为tag的名
      *
      * url:http://mp.weixin.qq.com/wiki/10/79502792eef98d6e0c6e1739da387346.html
@@ -212,7 +215,7 @@ class WP_Wechat {
     public function listen() {
         $body = file_get_contents('php://input');
         libxml_disable_entity_loader(true);
-        return simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
+        return (array)simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
     }
 
     /**
@@ -247,9 +250,9 @@ class WP_Wechat {
             throw new Exception('TOKEN is not defined!');
         }
 
-        $signature = $_GET["signature"];
-        $timestamp = $_GET["timestamp"];
-        $nonce = $_GET["nonce"];
+        $signature = @$_GET["signature"];
+        $timestamp = @$_GET["timestamp"];
+        $nonce = @$_GET["nonce"];
 
         $token = $this->token;
         $tmpArr = array($token, $timestamp, $nonce);
@@ -741,7 +744,7 @@ class WP_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/bb5031008f1494a59c6f71fa0f319c66.html
      */
-    public function get_user_info($openid, $lang = 'zh_CN ') {
+    public function get_user_info($openid, $lang = 'zh_CN') {
         return json_decode($this->_request_api(
             add_query_arg(array(
                 'access_token'  => $this->access_token,

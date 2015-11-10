@@ -41,14 +41,14 @@ __ [注]:可用性是通过比较获取access token时返回的时间和时限�
 
 > http://mp.weixin.qq.com/wiki/10/79502792eef98d6e0c6e1739da387346.html
 
-无论普通消息和事件推送消息都可以通过 ``` listen() ``` 来捕获消息并获得对消息对象化的返回
+无论普通消息和事件推送消息都可以通过 ``` listen() ``` 来捕获消息并获得对消息数组化的返回
 
 例如:
 
 ```
 $ec_wechat = new EC_Wechat();
 
-$request_obj = $ec_wechat->listen();
+$request_arr = $ec_wechat->listen();
 
 ```
 
@@ -65,19 +65,19 @@ $request_obj = $ec_wechat->listen();
  </xml>
 ```
 
-``` $request_obj ```可以获取以下对象
+``` $request_obj ```可以获取以下数组
 
 ```
-object(SimpleXMLElement)[131]
-  public 'ToUserName' => string 'i am to user' (length=12)
-  public 'FromUserName' => string 'i am from user' (length=14)
-  public 'CreateTime' => string '1348831860' (length=10)
-  public 'MsgType' => string 'text' (length=4)
-  public 'Content' => string 'this is a test request' (length=22)
-  public 'MsgId' => string '1234567890123456' (length=16)
+array (size=6)
+  'ToUserName' => string 'i am to user' (length=12)
+  'FromUserName' => string 'i am from user' (length=14)
+  'CreateTime' => string '1348831860' (length=10)
+  'MsgType' => string 'text' (length=4)
+  'Content' => string 'this is a test request' (length=22)
+  'MsgId' => string '1234567890123456' (length=16)
 ```
 
-对象的变量名为XML的tag标签名,值为tag里的值
+数组的键名为XML的tag标签名,值为tag里的值
 
 ##发送被动消息
 
@@ -582,9 +582,7 @@ object(stdClass)[131]
 可以通过 ``` gs_preview($user, $type, $mix_content, $use_name = false, $card_info = array()) ``` 预览消息
 
 ``` $mix_content ``` 会根据 ``` $type ``` 的不同而表现出不同的意义
-
 ``` $use_name ``` 决定 ``` $user ``` 参数代表的意义  true:为openId    false:为微信号
-
 如果要预览卡券信息要填写 ``` $card_info ``` ,格式应该像下面一样的数组
 
 ```
@@ -604,7 +602,7 @@ $card_info = array(
 $response = $ec_wechat->gs_preview('oJfmdsyxnpXQJiKCkpnJ4fIKHLrs', 'mpnews', 'cNh_wZsQfAzjcy_ZK-YUXdQMxF7fQ8fT7bSftlgxGxqKRohUbj8q4G3238hBMyft');
 ```
 
-预览一个音频
+预览一个图文
 
 ```
 $response = $ec_wechat->gs_preview('oJfmdsyxnpXQJiKCkpnJ4fIKHLrs', 'voice', 'Z74wZErTH4tcvRoGDjIIMfbtIMkbKMEJ5l67DmUSo06bJNemgmRJIFbPV-vVfRVS');

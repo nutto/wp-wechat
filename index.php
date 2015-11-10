@@ -14,6 +14,8 @@ Text Domain: wp_wechat
 
 define('WXD', 'wp_wechat');
 
+//var_dump(add_query_arg(array('action' => 'wechat_callback'), home_url('/wp-admin/admin-ajax.php')));
+
 /**
  * 引入类文件
  * TODO: 存疑，动态引入库是否会有安全性考虑？
@@ -50,7 +52,7 @@ add_action('admin_menu', function () {
         <div class="wrap">
             <h2><?php _e('Wechat Settings', 'wp_wechat'); ?></h2>
             <form method="post" action="options.php">
-                <?php settings_fields(WP_Wechat::OPTION_GROUP); ?>
+                <?php settings_fields(WP_Wechat::$OPTION_GROUP); ?>
                 <?php do_settings_sections('options-wechat'); ?>
                 <?php submit_button(); ?>
             </form>
@@ -82,9 +84,9 @@ add_action('admin_init', function() {
 //        'options-wechat'                            // page
 //    );
 
-    foreach(WP_Wechat::OPTION_FIELDS as $field_name => $args) {
+    foreach(WP_Wechat::$OPTION_FIELDS as $field_name => $args) {
 
-        register_setting(WP_Wechat::OPTION_GROUP, $field_name);
+        register_setting(WP_Wechat::$OPTION_GROUP, $field_name);
 
         // Referring: https://codex.wordpress.org/Function_Reference/add_settings_field
         add_settings_field(
@@ -115,7 +117,9 @@ add_action('admin_init', function() {
                id="<?php echo $field_name;?>"
                value="<?php form_option($field_name);?>"
                name="<?php echo $field_name;?>"
-               aria-describedby="<?php echo $field_name;?>-description" />
+               aria-describedby="<?php echo $field_name;?>-description"
+               <?php echo @$args['readonly'] ? 'readonly' : ''; ?>
+            />
         <p class="description"
            id="<?php echo $field_name;?>-description"><?php
             echo $field_description;
