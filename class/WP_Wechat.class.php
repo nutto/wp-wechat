@@ -103,25 +103,18 @@ class WP_Wechat {
     }
 
     /**
-     * @throws Exception
-     *
-     * 确保access token的有效性,如果access token失效,会去尝试获取新的access token
+     * -------------------------------------------------------------------------------------------------
+     * 工具
      */
-    public function ensure_access_token() {
-        // 没有初始化和超过认证时限都需要重新获取access token
-        if(!isset($this->access_token) || !isset($this->token_modified_time) || !isset($this->token_expire) ||
-            (time() - $this->token_modified_time) > ($this->token_expire - 60) ||   // 提早60秒获取,避免误差
-            get_option('wx_app_confirm_identify') != md5($this->app_id.'|'.$this->app_secret)) {  // 确认用户没有改变
-            $this->_get_access_token();
-        }
-    }
 
     /**
-     * @throws Exception
-     * 强制获取access token
+     * @param $data
+     * @return mixed|string|void
+     *
+     * 对Json编码的特殊处理函数
      */
-    public function get_access_token() {
-        return $this->_get_access_token();
+    public function _json_encode_dealer($data) {
+        return json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -202,20 +195,43 @@ class WP_Wechat {
         return $body;
     }
 
+    protected function _get_file($file_path) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $file_mime = finfo_file($finfo, realpath($file_path));
+        finfo_close($finfo);
+
+        return new CURLFile(realpath($file_path), $file_mime);
+    }
+
+    public function get_last_header() {
+        return $this->last_header;
+    }
+
     /**
-     * @return array
-     *
-     * 20151109:
-     * 接收消息
-     * 监听来自微信的xml请求,返回数组化的xml请求数据
-     * 键名为tag的名
-     *
-     * url:http://mp.weixin.qq.com/wiki/10/79502792eef98d6e0c6e1739da387346.html
+     * -------------------------------------------------------------------------------------------------
+     * 验证
      */
-    public function listen() {
-        $body = file_get_contents('php://input');
-        libxml_disable_entity_loader(true);
-        return (array)simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+    /**
+     * @throws Exception
+     *
+     * 确保access token的有效性,如果access token失效,会去尝试获取新的access token
+     */
+    public function ensure_access_token() {
+        // 没有初始化和超过认证时限都需要重新获取access token
+        if(!isset($this->access_token) || !isset($this->token_modified_time) || !isset($this->token_expire) ||
+            (time() - $this->token_modified_time) > ($this->token_expire - 60) ||   // 提早60秒获取,避免误差
+            get_option('wx_app_confirm_identify') != md5($this->app_id.'|'.$this->app_secret)) {  // 确认用户没有改变
+            $this->_get_access_token();
+        }
+    }
+
+    /**
+     * @throws Exception
+     * 强制获取access token
+     */
+    public function get_access_token() {
+        return $this->_get_access_token();
     }
 
     /**
@@ -266,6 +282,27 @@ class WP_Wechat {
         }else{
             return false;
         }
+    }
+
+    /**
+     * -------------------------------------------------------------------------------------------------
+     * 消息处理
+     */
+
+    /**
+     * @return array
+     *
+     * 20151109:
+     * 接收消息
+     * 监听来自微信的xml请求,返回数组化的xml请求数据
+     * 键名为tag的名
+     *
+     * url:http://mp.weixin.qq.com/wiki/10/79502792eef98d6e0c6e1739da387346.html
+     */
+    public function listen() {
+        $body = file_get_contents('php://input');
+        libxml_disable_entity_loader(true);
+        return (array)simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
     }
 
     /**
@@ -356,17 +393,10 @@ class WP_Wechat {
         return  $xml.'</xml>';
     }
 
-    public function get_last_header() {
-        return $this->last_header;
-    }
-
-    protected function _get_file($file_path) {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $file_mime = finfo_file($finfo, realpath($file_path));
-        finfo_close($finfo);
-
-        return new CURLFile(realpath($file_path), $file_mime);
-    }
+    /**
+     * -------------------------------------------------------------------------------------------------
+     * 素材管理
+     */
 
     /**
      * @param $type
@@ -582,6 +612,11 @@ class WP_Wechat {
     }
 
     /**
+     * -------------------------------------------------------------------------------------------------
+     * 用户管理
+     */
+
+    /**
      * @param $name
      * @return array|mixed|object
      *
@@ -603,7 +638,6 @@ class WP_Wechat {
     /**
      * @param $openid
      * @return array|mixed|object
-     *
      *
      * 查询用户所在分组
      *
@@ -791,6 +825,11 @@ class WP_Wechat {
                 'https://api.weixin.qq.com/cgi-bin/user/get')
         ));
     }
+
+    /**
+     * -------------------------------------------------------------------------------------------------
+     * 群发
+     */
 
     /**
      * @param $file_path
@@ -989,16 +1028,6 @@ class WP_Wechat {
     }
 
     /**
-     * @param $data
-     * @return mixed|string|void
-     *
-     * 对Json编码的特殊处理函数
-     */
-    public function _json_encode_dealer($data) {
-        return json_encode($data, JSON_UNESCAPED_UNICODE);
-    }
-
-    /**
      * @param $user
      * @param $mix_content
      * @param $type
@@ -1060,6 +1089,11 @@ class WP_Wechat {
     }
 
     /**
+     * -------------------------------------------------------------------------------------------------
+     * 菜单操作
+     */
+
+    /**
      * @param $menu
      * @return array|mixed|object
      *
@@ -1119,6 +1153,144 @@ class WP_Wechat {
             add_query_arg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/get_current_selfmenu_info')
+        ));
+    }
+
+    /**
+     * -------------------------------------------------------------------------------------------------
+     * 客服接口
+     */
+
+    /**
+     * @param $account
+     * @param $nickname
+     * @param $password
+     * @return array|mixed|object
+     *
+     * 添加客服帐号
+     *
+     * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
+     */
+    public function cs_create($account, $nickname, $password) {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/customservice/kfaccount/add'),
+            $this->_json_encode_dealer(array(
+                'kf_account' => $account,
+                'nickname' => $nickname,
+                'password' => md5($password),
+                )),
+            'POST'
+        ));
+    }
+
+    /**
+     * @param $account
+     * @param $nickname
+     * @param $password
+     * @return array|mixed|object
+     *
+     * 修改客服帐号
+     *
+     * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
+     */
+    public function cs_update($account, $nickname, $password) {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/customservice/kfaccount/update'),
+            $this->_json_encode_dealer(array(
+                'kf_account' => $account,
+                'nickname' => $nickname,
+                'password' => md5($password),
+                )),
+            'POST'
+        ));
+    }
+
+    /**
+     * @param $account
+     * @param $nickname
+     * @param $password
+     * @return array|mixed|object
+     *
+     * 删除客服帐号
+     *
+     * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
+     */
+    public function cs_del($account, $nickname, $password) {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/customservice/kfaccount/del'),
+            $this->_json_encode_dealer(array(
+                'kf_account' => $account,
+                'nickname' => $nickname,
+                'password' => md5($password),
+                )),
+            'POST'
+        ));
+    }
+
+    /**
+     * @param string $account
+     * @param string $file_path 头像路径
+     * @return array|mixed|object
+     *
+     * 设置客服帐号的头像
+     *
+     * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
+     */
+    public function cs_set_avatar($account, $file_path) {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+                'kf_account'  => $account,
+            ),'https://api.weixin.qq.com/customservice/kfaccount/del'),
+            array($this->_get_file($file_path)),
+            'POST'
+        ));
+    }
+
+    /**
+     * @param string $touser
+     * @param string $type
+     * @param array|mixed|string $mix_content
+     * @return array|mixed|object
+     *
+     * 客服接口-发消息
+     *
+     * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
+     */
+    public function cs_send($touser, $type, $mix_content) {
+        $data = array(
+            'touser' => $touser,
+            'msgtype' => $type,
+            $type => $mix_content
+        );
+
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/cgi-bin/message/custom/send'),
+            $this->_json_encode_dealer($data),
+            'POST'
+        ));
+    }
+
+    /**
+     * @return array|mixed|object
+     *
+     * 获取所有客服账号
+     *
+     * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
+     */
+    public function cs_get_list() {
+        return json_decode($this->_request_api(
+            add_query_arg(array(
+                'access_token'  => $this->access_token,
+            ),'https://api.weixin.qq.com/cgi-bin/customservice/getkflist')
         ));
     }
 };

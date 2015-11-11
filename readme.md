@@ -9,7 +9,7 @@
 >    License:     GPL3
 >    License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-__ 本接口旨在帮助用户快速构建,解析和发送微信接口中的消息数据,对于接口的返回和错误不作处理 __
+__本接口旨在帮助用户快速构建,解析和发送微信接口中的消息数据,对于接口的返回和错误不作处理__
 
 
 ##获取access token和确保access token的可用性
@@ -18,11 +18,11 @@ __ 本接口旨在帮助用户快速构建,解析和发送微信接口中的消�
 
 * ``` get_access_token() ``` 强制获取新的access token
 
-* ``` ensure_access_token() ``` 检查当前的accesss token的可用性[注],当当前的access token失效的时候会获取新的access token
+* ``` ensure_access_token() ``` 检查当前的accesss token的可用性^[注],当当前的access token失效的时候会获取新的access token
 
-* 当 ``` EC_Wechat ``` 类被实例化的时候会确保access token的可用性[注]
+* 当 ``` EC_Wechat ``` 类被实例化的时候会确保access token的可用性^[注]
 
-__ [注]:可用性是通过比较获取access token时返回的时间和时限来确保,如果在一个access token的有效期内通过其他方法获取了新的access token将会导致程序错误 __
+__[注]:可用性是通过比较获取access token时返回的时间和时限来确保,如果在一个access token的有效期内通过其他方法获取了新的access token将会导致程序错误__
 
 
 ##检测消息可靠性和响应服务器验证请求
@@ -33,7 +33,7 @@ __ [注]:可用性是通过比较获取access token时返回的时间和时限�
 
 * ```valid()  ``` 会通过请求中的 ``` signature ```, ``` timestamp ```, ``` nonce ``` 字段验证消息的可靠性,返回 ``` true ```或者 ``` false ```,如果请求中带有 ``` echostr ``` 会认为是服务器验证的请求,验证通过后会直接输出 ``` echostr ``` 的值作为响应
 
-** 应该在微信的callback页面的最前面调用 ``` valid() ``` 函数并完成必要的验证的逻辑操作 **
+**应该在微信的callback页面的最前面调用 ``` valid() ``` 函数并完成必要的验证的逻辑操作**
 
 ##接收消息
 
