@@ -25,13 +25,21 @@ $user_list = $wx->get_user_list();
 ##文档
 
 [获取access token和确保access token的可用性](https://github.com/nutto/wp-wechat/blob/master/doc/about_access_token.md)
+
 [检测消息可靠性和响应服务器验证请求](https://github.com/nutto/wp-wechat/blob/master/doc/about_valid.md)
+
 [变量与一些工具函数](https://github.com/nutto/wp-wechat/blob/master/doc/about_variables_and_tools.md)
+
 [接收消息](https://github.com/nutto/wp-wechat/blob/master/doc/about_receiving_msg.md)
+
 [发送被动消息](https://github.com/nutto/wp-wechat/blob/master/doc/about_sending_msg.md)
+
 [获取用户列表](https://github.com/nutto/wp-wechat/blob/master/doc/about_users.md)
+
 [用户分组管理](https://github.com/nutto/wp-wechat/blob/master/doc/about_groups.md)
+
 [素材管理](https://github.com/nutto/wp-wechat/blob/master/doc/about_materials.md)
+
 [群发接口](https://github.com/nutto/wp-wechat/blob/master/doc/about_group_sending.md)
 
 ##交流与建议
