@@ -1,6 +1,5 @@
 #检测消息可靠性和响应服务器验证请求
 
----
 
 > http://mp.weixin.qq.com/wiki/17/2d4265491f12608cd170a95559800f2d.html
 

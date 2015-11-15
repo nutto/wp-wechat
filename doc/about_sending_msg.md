@@ -1,6 +1,5 @@
 #发送被动消息
 
----
 
 > http://mp.weixin.qq.com/wiki/14/89b871b5466b19b3efa4ada8e577d45e.html
 

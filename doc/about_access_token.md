@@ -1,6 +1,5 @@
 #获取access token和确保access token的可用性
 
----
 
 * ``` get_access_token() ``` 强制获取新的access token
 

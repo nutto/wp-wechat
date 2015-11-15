@@ -1,6 +1,5 @@
 #获取用户列表
 
----
 
 > http://mp.weixin.qq.com/wiki/0/d0e07720fc711c02a3eab6ec33054804.html
 

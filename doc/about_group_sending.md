@@ -2,7 +2,6 @@
 
 > http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
 
----
 
 ##上传图文消息内的图片获取URL
 
