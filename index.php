@@ -48,7 +48,8 @@ add_action('admin_menu', function () {
         'wechat_plugin_options'                     // function (callback)
     );
 
-    function wechat_plugin_options() { ?>
+    function wechat_plugin_options() {
+        $wx = new WP_Wechat(); ?>
         <div class="wrap">
             <h2><?php _e('Wechat Settings', 'wp_wechat'); ?></h2>
             <form method="post" action="options.php">
@@ -57,7 +58,6 @@ add_action('admin_menu', function () {
                 <?php submit_button(); ?>
             </form>
             <!-- TODO: 临时菜单配置 -->
-            <?php $wx = new WP_Wechat(); ?>
             <h2>微信菜单设置</h2>
             <form method="post" id="form_wechat_menu">
                 <textarea style="width: 100%" rows="8" id="wechat_menu" name="wechat_menu"><?=$wx->_json_encode_dealer($wx->get_menu());?></textarea>
