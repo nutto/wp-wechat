@@ -3,10 +3,10 @@ if($_POST) {
     switch($_POST['wechat_action']) {
         case 'update_menu':
             $menu_json = sanitize_text_field(wp_unslash($_POST['menu_json']));
-            $create_menu_msg = $wx->create_menu(json_decode($menu_json));
+            $create_menu_msg = $wx->createMenu(json_decode($menu_json));
             break;
         case 'update_access_token';
-            $wx->get_access_token();
+            $wx->getAccessToken();
             break;
         default:
             break;
@@ -39,7 +39,7 @@ if($_POST) {
         <a href="javascript:;" class="plus-main-menu">+主菜单</a>
         <ul id="menu-block" >
             <?php
-            $menus = $wx->get_menu();
+            $menus = $wx->getMenu();
             if(sizeof($menus) > 0) { ?>
                 <?php foreach($menus as $item) { ?>
                     <li class="main-menu">

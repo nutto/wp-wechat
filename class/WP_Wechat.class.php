@@ -70,9 +70,9 @@ class WP_Wechat extends Base_Wechat {
     }
 
     // 20151115:Base_Wechat分离,获得access的信息后存入配置项
-    protected function _get_access_token() {
+    protected function _getAccessToken() {
         // 更新access token信息
-        $access_info = parent::_get_access_token();
+        $access_info = parent::getAccessToken();
 
         update_option('wx_token_modified_time', $access_info['token_modified_time']);
 
@@ -85,4 +85,3 @@ class WP_Wechat extends Base_Wechat {
         return $access_info['access_token'];
     }
 };
-

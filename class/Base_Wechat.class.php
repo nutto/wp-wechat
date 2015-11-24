@@ -35,7 +35,7 @@ class Base_Wechat {
     // 公众号的全局唯一票据
     protected $access_token;
 
-    // 微信应用ID与应用密钥的hash值
+    // 微信应用ID与应用密钥的hash值,可以帮助判断$app_id和$app_secret是否有改变
     protected $app_confirm_identify;
 
     // 最近一次调用接口的时候获取到的header信息数组
@@ -64,31 +64,36 @@ class Base_Wechat {
         $this->app_confirm_identify = $app_confirm_identify;
 
         // 20151109:确保Access Token的有效性
-        $this->ensure_access_token();
+        $this->ensureAccessToken();
     }
 
     /**
      * -------------------------------------------------------------------------------------------------
-     * 工具
+     * 工具a
      */
 
     /**
      * @param $data
-     * @param null $args
+     * @param int $args 控制json输出格式,默认不转Unicode
      * @return mixed|string|void
      *
      * 对Json编码的特殊处理函数
      */
-    protected function _json_encode_dealer($data, $args = null) {
-        $args = $args ?: JSON_UNESCAPED_UNICODE;
+    protected function _jsonEncodeDealer($data, $args = JSON_UNESCAPED_UNICODE) {
         return json_encode($data, $args);
     }
 
-    public function json_encode_dealer($data, $args = null) {
-        return $this->_json_encode_dealer($data, $args);
+    public function jsonEncodeDealer($data, $args = null) {
+        return $this->_jsonEncodeDealer($data, $args);
     }
 
-    public function _add_query_arg($args, $url) {
+    /**
+     * @param array $args Query string 的键值数组
+     * @param string $url
+     * @return string
+     *
+     */
+    public function _addQueryArg($args, $url) {
         $parsed_url = parse_url($url);
 
         $addition = '';
@@ -110,18 +115,18 @@ class Base_Wechat {
      * @return array
      * @throws Exception
      *
-     * 根据配置获取access token
+     * 根据配置立刻取access token
      * 不会检查是否有原access token或原access token是否有效
      * 会强制刷新该用户的access token,并将刷新的信息以数组形式返回
      */
-    protected function _get_access_token() {
+    protected function _getAccessToken() {
         $url = 'https://api.weixin.qq.com/cgi-bin/token';
         $arg = array(
             'grant_type'=> 'client_credential',
             'appid'     => $this->app_id,
             'secret'    => $this->app_secret,
         );
-        $token_result = json_decode($this->_request_api($url, $arg));
+        $token_result = json_decode($this->_requestApi($url, $arg));
         if(!$token_result) {
             throw new Exception('Fail to get Access Token!');
         }
@@ -145,14 +150,14 @@ class Base_Wechat {
 
     /**
      * @param $url
-     * @param array $data
-     * @param string $method
+     * @param array $data 发送请求的数据,如果为GET方法数据会成为query string
+     * @param string $method 请求的方法 POST | GET
      * @return array|mixed|object
      *
      * 用curl向微信发送请求的函数
      * 返回原始数据
      */
-    protected function _request_api($url, $data = array(), $method = 'GET') {
+    protected function _requestApi($url, $data = array(), $method = 'GET') {
         $request = curl_init();
         $request_options = array(
 //                CURLOPT_HEADER          => TRUE,   // 返回不带头部
@@ -172,7 +177,7 @@ class Base_Wechat {
                 break;
             case 'GET':
                 curl_setopt($request, CURLOPT_CUSTOMREQUEST, 'GET');
-                curl_setopt($request, CURLOPT_URL, $this->_add_query_arg($data, $url));
+                curl_setopt($request, CURLOPT_URL, $this->_addQueryArg($data, $url));
                 break;
         }
         $body = curl_exec($request);
@@ -185,7 +190,13 @@ class Base_Wechat {
         return $body;
     }
 
-    protected function _get_file($file_path) {
+    /**
+     * @param string $file_path 文件路径
+     * @return CURLFile
+     *
+     * 获取文件路径返回CURL可用的文件资源
+     */
+    protected function _getFile($file_path) {
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $file_mime = finfo_file($finfo, realpath($file_path));
         finfo_close($finfo);
@@ -193,7 +204,12 @@ class Base_Wechat {
         return new CURLFile(realpath($file_path), $file_mime);
     }
 
-    public function get_last_header() {
+    /**
+     * @return mixed
+     *
+     * 获取最后一次请求返回的头部信息
+     */
+    public function getLastHeader() {
         return $this->last_header;
     }
 
@@ -207,12 +223,12 @@ class Base_Wechat {
      *
      * 确保access token的有效性,如果access token失效,会去尝试获取新的access token
      */
-    public function ensure_access_token() {
+    public function ensureAccessToken() {
         // 没有初始化和超过认证时限都需要重新获取access token
         if(!isset($this->access_token) || !isset($this->token_modified_time) || !isset($this->token_expire) ||
             (time() - $this->token_modified_time) > ($this->token_expire - 60) ||   // 提早60秒获取,避免误差
             $this->app_confirm_identify != md5($this->app_id.'|'.$this->app_secret)) {  // 确认用户没有改变
-            $this->_get_access_token();
+            $this->_getAccessToken();
         }
     }
 
@@ -220,8 +236,8 @@ class Base_Wechat {
      * @throws Exception
      * 强制获取access token
      */
-    public function get_access_token() {
-        return $this->_get_access_token();
+    public function getAccessToken() {
+        return $this->_getAccessToken();
     }
 
     /**
@@ -285,7 +301,7 @@ class Base_Wechat {
      * 20151109:
      * 接收消息
      * 监听来自微信的xml请求,返回数组化的xml请求数据
-     * 键名为tag的名
+     * 键名为tag的标签名,键值为标签的值
      *
      * url:http://mp.weixin.qq.com/wiki/10/79502792eef98d6e0c6e1739da387346.html
      */
@@ -296,9 +312,12 @@ class Base_Wechat {
     }
 
     /**
-     * @param $to_user
-     * @param $from_user
-     * @param $data
+     * @param string $to_user
+     * @param string $from_user
+     * @param array $data 应该传入除了ToUserName, FromUserName, CreateTime, MsgType外还需要填写的标签数据
+     *                     传入的键名为标签名,键值为标签的值.标签名请参考微信官方文档
+     *      例如需要一个'text'类型的信息,你需要一个这样的$data:
+     *                          + [ 'Content' => 'write your content' ]
      * @param string $msg_type
      * @param null $create_time
      * @return string
@@ -308,7 +327,7 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/89b871b5466b19b3efa4ada8e577d45e.html
      */
-    public function get_response_msg($to_user, $from_user, $data, $msg_type = 'text', $create_time = null) {
+    public function getResponseMsg($to_user, $from_user, $data, $msg_type = 'text', $create_time = null) {
         $create_time = $create_time ?: time();
         $xml = "<xml>
             <ToUserName><![CDATA[$to_user]]></ToUserName>
@@ -397,14 +416,14 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/5/963fc70b80dc75483a271298a76a8d59.html
      */
-    public function tmp_media_upload($type, $file_path) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function tmpMediaUpload($type, $file_path) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 'type'          => $type,
                 ),
                 'https://api.weixin.qq.com/cgi-bin/media/upload'),
-            array('media'   => $this->_get_file($file_path)),
+            array('media'   => $this->_getFile($file_path)),
             'POST'
         ));
     }
@@ -421,20 +440,20 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/7e6c03263063f4813141c3e17dd4350a.html
      */
-    public function media_upload($type, $file_path, $title = null, $introduction= null) {
+    public function mediaUpload($type, $file_path, $title = null, $introduction= null) {
         $data = array(
             'type'  => $type,
-            'media' => $this->_get_file($file_path),
+            'media' => $this->_getFile($file_path),
         );
         // 如果是视频要加上description字段
         if($type == 'video') {
-            $data['description'] = $this->_json_encode_dealer(array(
+            $data['description'] = $this->_jsonEncodeDealer(array(
                 'title'         => $title,
                 'introduction'  => $introduction,
             ));
         }
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                     'access_token'  => $this->access_token,
                 ),
                 'https://api.weixin.qq.com/cgi-bin/material/add_material'),
@@ -467,13 +486,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/7e6c03263063f4813141c3e17dd4350a.html
      */
-    public function add_news($articles) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function addNews($articles) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                     'access_token'  => $this->access_token,
                 ),
                 'https://api.weixin.qq.com/cgi-bin/material/add_news'),
-            $this->_json_encode_dealer(array( 'articles'  => $articles )),
+            $this->_jsonEncodeDealer(array( 'articles'  => $articles )),
             'POST'
         ));
     }
@@ -487,8 +506,8 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/11/07b6b76a6b6e8848e855a435d5e34a5f.html
      */
-    public function get_tmp_media($media_id) {
-        return $this->_request_api(
+    public function getTmpMedia($media_id) {
+        return $this->_requestApi(
             'https://api.weixin.qq.com/cgi-bin/media/get',
             array(
                 'access_token'  => $this->access_token,
@@ -505,13 +524,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/4/b3546879f07623cb30df9ca0e420a5d0.html
      */
-    public function get_media($media_id) {
-        return $this->_request_api(
-            $this->_add_query_arg(array(
+    public function getMedia($media_id) {
+        return $this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/get_material'),
-            $this->_json_encode_dealer(array( 'media_id'  => $media_id, )),
+            $this->_jsonEncodeDealer(array( 'media_id'  => $media_id, )),
             'POST'
         );
     }
@@ -524,13 +543,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/5/e66f61c303db51a6c0f90f46b15af5f5.html
      */
-    public function delete_media($media_id) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function deleteMedia($media_id) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/del_material'),
-            $this->_json_encode_dealer(array( 'media_id'  => $media_id )),
+            $this->_jsonEncodeDealer(array( 'media_id'  => $media_id )),
             'POST'
         ));
     }
@@ -538,20 +557,31 @@ class Base_Wechat {
     /**
      * @param $media_id
      * @param $index
-     * @param $article
+     * @param array $article 文章信息的数组
+     *
+     *     $article => {
+     *          "title" => 'TITLE',
+     *          "thumb_media_id" => 'THUMB_MEDIA_ID',
+     *          "author" => 'AUTHOR',
+     *          "digest" => 'DIGEST',
+     *          "show_cover_pic" => 'SHOW_COVER_PIC(0 / 1)',
+     *          "content" => 'CONTENT',
+     *          "content_source_url" => 'CONTENT_SOURCE_URL'
+     *       }
+     *
      * @return array|mixed|object
      *
      * 修改永久图文素材
      *
      * url:http://mp.weixin.qq.com/wiki/4/19a59cba020d506e767360ca1be29450.html
      */
-    public function update_news($media_id, $index, $article) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function updateNews($media_id, $index, $article) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/update_news'),
-            $this->_json_encode_dealer(array(
+            $this->_jsonEncodeDealer(array(
                 'media_id'  => $media_id,
                 'index'     => $index,
                 'articles'  => $article,
@@ -567,8 +597,8 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/16/8cc64f8c189674b421bee3ed403993b8.html
      */
-    public function get_material_count() {
-        return json_decode($this->_request_api(
+    public function getMaterialCount() {
+        return json_decode($this->_requestApi(
             'https://api.weixin.qq.com/cgi-bin/material/get_materialcount',
             array(
                 'access_token'  => $this->access_token,
@@ -586,13 +616,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/12/2108cd7aafff7f388f41f37efa710204.html
      */
-    public function get_material_list($type, $offset, $count) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getMaterialList($type, $offset, $count) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/material/batchget_material'),
-            $this->_json_encode_dealer(array(
+            $this->_jsonEncodeDealer(array(
                 'type'  => $type,
                 'offset'     => $offset,
                 'count'  => $count,
@@ -614,13 +644,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function create_group($name) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function createGroup($name) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/create'),
-                $this->_json_encode_dealer(array( 'group'  => array( 'name'  => $name, ))),
+                $this->_jsonEncodeDealer(array( 'group'  => array( 'name'  => $name, ))),
             'POST'
         ));
     }
@@ -633,13 +663,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function get_user_group($openid) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getUserGroup($openid) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/getid'),
-            $this->_json_encode_dealer(array('openid' => $openid)),
+            $this->_jsonEncodeDealer(array('openid' => $openid)),
             'POST'
         ));
     }
@@ -653,13 +683,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function update_group($group_id, $name) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function updateGroup($group_id, $name) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/update'),
-            $this->_json_encode_dealer(array( 'group'  => array('id' => $group_id, 'name'  => $name))),
+            $this->_jsonEncodeDealer(array( 'group'  => array('id' => $group_id, 'name'  => $name))),
             'POST'
         ));
     }
@@ -673,13 +703,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function move_user($openid, $to_groupid) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function moveUser($openid, $to_groupid) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/members/update'),
-            $this->_json_encode_dealer(array( 'openid'  => $openid, 'to_groupid' => $to_groupid)),
+            $this->_jsonEncodeDealer(array( 'openid'  => $openid, 'to_groupid' => $to_groupid)),
             'POST'
         ));
     }
@@ -693,13 +723,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function move_batch_users($openid_list, $to_groupid) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function moveBatchUsers($openid_list, $to_groupid) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/members/batchupdate'),
-            $this->_json_encode_dealer(array( 'openid'  => $openid_list, 'to_groupid' => $to_groupid)),
+            $this->_jsonEncodeDealer(array( 'openid'  => $openid_list, 'to_groupid' => $to_groupid)),
             'POST'
         ));
     }
@@ -712,13 +742,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function del_group($group_id) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function delGroup($group_id) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/delete'),
-            $this->_json_encode_dealer(array( 'group'  => array('id' => $group_id))),
+            $this->_jsonEncodeDealer(array( 'group'  => array('id' => $group_id))),
             'POST'
         ));
     }
@@ -732,13 +762,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/1/4a566d20d67def0b3c1afc55121d2419.html
      */
-    public function set_user_remark($openid, $remark) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function setUserRemark($openid, $remark) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/user/info/updateremark'),
-            $this->_json_encode_dealer(array( 'openid'  => $openid, 'remark' => $remark)),
+            $this->_jsonEncodeDealer(array( 'openid'  => $openid, 'remark' => $remark)),
             'POST'
         ));
     }
@@ -750,9 +780,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/56d992c605a97245eb7e617854b169fc.html
      */
-    public function get_groups() {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getGroups() {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/groups/get')
@@ -768,9 +798,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/bb5031008f1494a59c6f71fa0f319c66.html
      */
-    public function get_user_info($openid, $lang = 'zh_CN') {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getUserInfo($openid, $lang = 'zh_CN') {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 'openid'  => $openid,
                 'lang'  => $lang,
@@ -787,13 +817,13 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/bb5031008f1494a59c6f71fa0f319c66.html
      */
-    public function get_batch_users_info($user_list) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getBatchUsersInfo($user_list) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),
                 'https://api.weixin.qq.com/cgi-bin/user/info/batchget'),
-            $this->_json_encode_dealer(array('user_list' => $user_list)),
+            $this->_jsonEncodeDealer(array('user_list' => $user_list)),
             'POST'
         ));
     }
@@ -806,9 +836,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/0/d0e07720fc711c02a3eab6ec33054804.html
      */
-    public function get_user_list($next_openid = null) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getUserList($next_openid = null) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 'next_openid'  => $next_openid,
             ),
@@ -819,6 +849,7 @@ class Base_Wechat {
     /**
      * -------------------------------------------------------------------------------------------------
      * 群发
+     * gs for group send
      */
 
     /**
@@ -830,12 +861,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_upload_img($file_path) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function gsUploadImg($file_path) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/media/uploadimg'),
-            array('media' => $this->_get_file($file_path)),
+            array('media' => $this->_getFile($file_path)),
             'POST'
         ));
     }
@@ -849,12 +880,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_upload_news($articles) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function gsUploadNews($articles) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/media/uploadnews'),
-            $this->_json_encode_dealer(array('articles' => $articles)),
+            $this->_jsonEncodeDealer(array('articles' => $articles)),
             'POST'
         ));
     }
@@ -871,12 +902,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_upload_video($media_id, $title, $description) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function gsUploadVideo($media_id, $title, $description) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://file.api.weixin.qq.com/cgi-bin/media/uploadvideo'),
-            $this->_json_encode_dealer(array(
+            $this->_jsonEncodeDealer(array(
                 'media_id' => $media_id,
                 'title' => $title,
                 'description' => $description,
@@ -894,12 +925,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_del_msg($msg_id) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function gsDelMsg($msg_id) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/delete'),
-            $this->_json_encode_dealer(array( 'msg_id' => $msg_id, )),
+            $this->_jsonEncodeDealer(array( 'msg_id' => $msg_id, )),
             'POST'
         ));
     }
@@ -913,12 +944,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_get_status($msg_id) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function gsGetStatus($msg_id) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/get'),
-            $this->_json_encode_dealer(array( 'msg_id' => $msg_id, )),
+            $this->_jsonEncodeDealer(array( 'msg_id' => $msg_id, )),
             'POST'
         ));
     }
@@ -935,7 +966,7 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_send_all($type, $mix_content, $is_to_all = true, $group_id = null) {
+    public function gsSendAll($type, $mix_content, $is_to_all = true, $group_id = null) {
         $data = array(
             'filter'    => array(
                 'is_to_all' => $is_to_all,
@@ -963,11 +994,11 @@ class Base_Wechat {
                 $data['wxcard'] = array('card_id'  => $mix_content);
                 break;
         }
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/sendall'),
-            $this->_json_encode_dealer($data),
+            $this->_jsonEncodeDealer($data),
             'POST'
         ));
     }
@@ -983,7 +1014,7 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_send_msg($type, $mix_content, $user_list) {
+    public function gsSendMsg($type, $mix_content, $user_list) {
         $data = array(
             'touser'    => $user_list,
             'msgtype'   => $type,
@@ -1008,11 +1039,11 @@ class Base_Wechat {
                 $data['wxcard'] = array('card_id'  => $mix_content);
                 break;
         }
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/send'),
-            $this->_json_encode_dealer($data),
+            $this->_jsonEncodeDealer($data),
             'POST'
         ));
     }
@@ -1021,24 +1052,25 @@ class Base_Wechat {
      * @param $user
      * @param $mix_content
      * @param $type
-     * @param $use_name
-     * @param $card_info
+     * @param string $use_name 指定推送对象的昵称,如果填写了就会忽略$user变量
+     * @param array $card_info 如果要预览卡券信息要填写$card_info,格式应该像下面一样的数组
+     *
+     *     $card_info = array(
+     *         "code"=> '',
+     *         "openid"=> '',
+     *         "timestamp"=> '',
+     *         "signature"=> '',
+     *     )
+     *
      * @return array|mixed|object
      *
      * 群发接口
      * 预览接口
      * $use_name 决定$user参数代表的意义  true:为openId    false:为微信号
-     * 如果要预览卡券信息要填写$card_info,格式应该像下面一样的数组
-     * $card_info = array(
-     * "code"=> '',
-     * "openid"=> '',
-     * "timestamp"=> '',
-     * "signature"=> '',
-     * )
      *
      * url:http://mp.weixin.qq.com/wiki/15/5380a4e6f02f2ffdc7981a8ed7a40753.html
      */
-    public function gs_preview($user, $type, $mix_content, $use_name = false, $card_info = array()) {
+    public function gsPreview($user, $type, $mix_content, $use_name = '', $card_info = array()) {
         $data = array();
         if($use_name) {
             $data['towxname'] = $user;
@@ -1066,14 +1098,14 @@ class Base_Wechat {
                 break;
             case 'wxcard':
                 $data['wxcard'] = array('card_id'  => $mix_content);
-                $data['wxcard'] = array('card_ext'  => $this->_json_encode_dealer($card_info));
+                $data['wxcard'] = array('card_ext'  => $this->_jsonEncodeDealer($card_info));
                 break;
         }
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 ),'https://api.weixin.qq.com/cgi-bin/message/mass/preview'),
-            $this->_json_encode_dealer($data),
+            $this->_jsonEncodeDealer($data),
             'POST'
         ));
     }
@@ -1084,19 +1116,29 @@ class Base_Wechat {
      */
 
     /**
-     * @param $menu
+     * @param array $menu 菜单项的数组,结构类似如下,详情参见文档
+     *
+     *     [
+     *       {
+     *         "type" => "click",
+     *         "name" => "今日歌曲",
+     *         "key" => "V1001_TODAY_MUSIC"
+     *       }
+     *       ...
+     *     ]
+     *
      * @return array|mixed|object
      *
      * 新增自定义菜单
      *
      * url:http://mp.weixin.qq.com/wiki/6/95cade7d98b6c1e1040cde5d9a2f9c26.html
      */
-    public function create_menu($menu) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function createMenu($menu) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/menu/create'),
-            $this->_json_encode_dealer(array( 'button' => $menu, )),
+            $this->_jsonEncodeDealer(array( 'button' => $menu, )),
             'POST'
         ));
     }
@@ -1108,9 +1150,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/2/07112acf4bb9a19d50c8ae08515a2a6a.html
      */
-    public function get_menu() {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getMenu() {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/menu/get')
         ))->menu->button;
@@ -1123,9 +1165,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/11/51aa2be3cc267a4947216a44b2e25187.html
      */
-    public function del_menu() {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function delMenu() {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/menu/delete')
         ));
@@ -1138,9 +1180,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/6/51671aa8efcd21493b8a8f505c288706.html
      */
-    public function get_current_menu() {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function getCurrentMenu() {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/get_current_selfmenu_info')
         ));
@@ -1149,6 +1191,7 @@ class Base_Wechat {
     /**
      * -------------------------------------------------------------------------------------------------
      * 客服接口
+     * cs for customer service
      */
 
     /**
@@ -1161,12 +1204,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
      */
-    public function cs_create($account, $nickname, $password) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function csCreate($account, $nickname, $password) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/customservice/kfaccount/add'),
-            $this->_json_encode_dealer(array(
+            $this->_jsonEncodeDealer(array(
                 'kf_account' => $account,
                 'nickname' => $nickname,
                 'password' => md5($password),
@@ -1185,12 +1228,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
      */
-    public function cs_update($account, $nickname, $password) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function csUpdate($account, $nickname, $password) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/customservice/kfaccount/update'),
-            $this->_json_encode_dealer(array(
+            $this->_jsonEncodeDealer(array(
                 'kf_account' => $account,
                 'nickname' => $nickname,
                 'password' => md5($password),
@@ -1209,12 +1252,12 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
      */
-    public function cs_del($account, $nickname, $password) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function csDel($account, $nickname, $password) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/customservice/kfaccount/del'),
-            $this->_json_encode_dealer(array(
+            $this->_jsonEncodeDealer(array(
                 'kf_account' => $account,
                 'nickname' => $nickname,
                 'password' => md5($password),
@@ -1225,20 +1268,20 @@ class Base_Wechat {
 
     /**
      * @param string $account
-     * @param string $file_path 头像路径
+     * @param string $file_path 头像文件路径
      * @return array|mixed|object
      *
      * 设置客服帐号的头像
      *
      * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
      */
-    public function cs_set_avatar($account, $file_path) {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function csSetAvatar($account, $file_path) {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
                 'kf_account'  => $account,
             ),'https://api.weixin.qq.com/customservice/kfaccount/del'),
-            array($this->_get_file($file_path)),
+            array($this->_getFile($file_path)),
             'POST'
         ));
     }
@@ -1253,18 +1296,17 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
      */
-    public function cs_send($touser, $type, $mix_content) {
+    public function csSend($touser, $type, $mix_content) {
         $data = array(
             'touser' => $touser,
             'msgtype' => $type,
             $type => $mix_content
         );
 
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
-                'access_token'  => $this->access_token,
-            ),'https://api.weixin.qq.com/cgi-bin/message/custom/send'),
-            $this->_json_encode_dealer($data),
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array('access_token'  => $this->access_token,),
+                'https://api.weixin.qq.com/cgi-bin/message/custom/send'),
+            $this->_jsonEncodeDealer($data),
             'POST'
         ));
     }
@@ -1276,9 +1318,9 @@ class Base_Wechat {
      *
      * url:http://mp.weixin.qq.com/wiki/14/d9be34fe03412c92517da10a5980e7ee.html
      */
-    public function cs_get_list() {
-        return json_decode($this->_request_api(
-            $this->_add_query_arg(array(
+    public function csGetList() {
+        return json_decode($this->_requestApi(
+            $this->_addQueryArg(array(
                 'access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/customservice/getkflist')
         ));

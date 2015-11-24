@@ -44,7 +44,7 @@ $user_list = $wx->get_user_list();
 
 ##交流与建议
 
-Nutto:<a href=mailto:nutto.pan@gmail.com>nutto.pan@gmail.com</a>
+<a href=mailto:nutto.pan@gmail.com>nutto.pan@gmail.com</a>
 
 ##许可
 
