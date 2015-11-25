@@ -42,6 +42,10 @@ $user_list = $wx->get_user_list();
 
 [群发接口](https://github.com/nutto/wp-wechat/blob/master/doc/about_group_sending.md)
 
+[自定义菜单管理](https://github.com/nutto/wp-wechat/blob/master/doc/about_menu.md)
+
+[客服接口](https://github.com/nutto/wp-wechat/blob/master/doc/about_customer_service.md)
+
 ##交流与建议
 
 <a href=mailto:nutto.pan@gmail.com>nutto.pan@gmail.com</a>
