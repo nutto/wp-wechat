@@ -3,23 +3,21 @@
 
 > http://mp.weixin.qq.com/wiki/0/d0e07720fc711c02a3eab6ec33054804.html
 
-使用 ``` get_user_list($next_openid = null) ``` 获取用户列表,不给参数获取所有的用户
+使用 ``` getUserList($next_openid = null) ``` 获取用户列表,不给参数获取所有的用户
 
 
 #获取用户基本信息
-
----
 
 > http://mp.weixin.qq.com/wiki/14/bb5031008f1494a59c6f71fa0f319c66.html
 
 ##获取用户基本信息
 
-使用 ``` get_user_info($openid, $lang = 'zh_CN ') ``` 获取用户基本信息
+使用 ``` getUserInfo($openid, $lang = 'zh_CN ') ``` 获取用户基本信息
 
 
 ##批量获取用户基本信息
 
-使用 ``` get_batch_users_info($user_list) ``` 批量获取用户基本信息
+使用 ``` getBatchUsersInfo($user_list) ``` 批量获取用户基本信息
 
 例子:
 
@@ -32,7 +30,7 @@ $user = array(
 $user_list[] = $user;
 $user_list[] = $user;
 
-$response = $ec_wechat->get_batch_users_info($user_list);
+$response = $ec_wechat->getBatchUsersInfo($user_list);
 ```
 
 ``` $response ``` 可以获得:
@@ -78,4 +76,4 @@ object(stdClass)[1864]
 
 > http://mp.weixin.qq.com/wiki/1/4a566d20d67def0b3c1afc55121d2419.html
 
-使用 ``` set_user_remark($openid, $remark) ``` 设置备注名
+使用 ``` setUserRemark($openid, $remark) ``` 设置备注名

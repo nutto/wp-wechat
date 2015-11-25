@@ -3,7 +3,7 @@
 
 > http://mp.weixin.qq.com/wiki/14/89b871b5466b19b3efa4ada8e577d45e.html
 
-* 使用 ``` get_response_msg($to_user, $from_user, $data, $msg_type = 'text', $create_time = null) ``` 能快速构造符合返回接口规范的XML字符串
+* 使用 ``` getResponseMsg($to_user, $from_user, $data, $msg_type = 'text', $create_time = null) ``` 能快速构造符合返回接口规范的XML字符串
 
 不同类型的消息的公共部分通过特定参数进行统一构造
 
@@ -14,11 +14,11 @@
 构造简单的文本消息
 
 ```
-$ec_wechat = new EC_Wechat();
+$wp_wechat = new WP_Wechat();
 
 $data['Content'] = 'i am a test';
 
-$response_str = $ec_wechat->get_response_msg('Nutto', 'Easecloud', $data);
+$response_str = $wp_wechat->getResponseMsg('Nutto', 'Easecloud', $data);
 ```
 
 ``` $response_str ``` 将会获得
@@ -42,7 +42,7 @@ $response_str = $ec_wechat->get_response_msg('Nutto', 'Easecloud', $data);
 构造多图文消息
 
 ```
-$ec_wechat = new EC_Wechat();
+$wp_wechat = new WP_Wechat();
 
 $article = array(
     'Title' => 'test article Title',
@@ -58,7 +58,7 @@ $article['Description'] = 'test article Description2';
 
 $articles_data[] = $article;
 
-$response_str = $ec_wechat->get_response_msg('Nutto', 'Easecloud', $articles_data, 'news')
+$response_str = $wp_wechat->getResponseMsg('Nutto', 'Easecloud', $articles_data, 'news')
 ```
 
 ``` $response_str ``` 将会获得

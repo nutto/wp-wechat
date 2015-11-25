@@ -8,9 +8,9 @@
 例如:
 
 ```
-$ec_wechat = new EC_Wechat();
+$wp_wechat = new WP_Wechat();
 
-$request_arr = $ec_wechat->listen();
+$request_arr = $wp_wechat->listen();
 
 ```
 

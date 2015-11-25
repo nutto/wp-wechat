@@ -5,7 +5,7 @@
 
 > http://mp.weixin.qq.com/wiki/5/963fc70b80dc75483a271298a76a8d59.html
 
-* ``` tmp_media_upload($type, $file_dir) ```
+* ``` tmpMediaUpload($type, $file_dir) ```
 
 1. ``` $type ``` 素材类型
 
@@ -15,7 +15,7 @@
 
 > http://mp.weixin.qq.com/wiki/14/7e6c03263063f4813141c3e17dd4350a.html
 
-* ``` media_upload($type, $file_path, $title = null, $introduction= null) ```
+* ``` mediaUpload($type, $file_path, $title = null, $introduction= null) ```
 
 1. ``` $type ``` 素材类型
 
@@ -30,11 +30,11 @@
 
 上传一个音频
 ```
-$ec_wechat = new EC_Wechat();
+$wp_wechat = new WP_Wechat();
 
 $path = '\tmp\a.mp3';
 
-$response = $ec_wechat->media_upload('voice', $path);
+$response = $wp_wechat->mediaUpload('voice', $path);
 ```
 
 ``` $response ``` 可以获得
@@ -47,12 +47,12 @@ object(stdClass)[134]
 
 ##增加图文素材
 
-可以通过 ``` add_news($articles) ``` 来增加图文素材
+可以通过 ``` addNews($articles) ``` 来增加图文素材
 
 例子:
 
 ```
-$ec_wechat = new EC_Wechat();
+$wp_wechat = new WP_Wechat();
 
 $article = array(
     "title" => 'test',
@@ -67,7 +67,7 @@ $article = array(
 $articles[]  = $article;
 $articles[]  = $article;
 
-$response = $ec_wechat->add_news($articles);
+$response = $wp_wechat->addNews($articles);
 ```
 
 ``` $response ``` 会获得
@@ -80,9 +80,9 @@ object(stdClass)[131]
 
 ##获取素材
 
-获取临时素材,使用 ``` get_tmp_media($media_id) ```
+获取临时素材,使用 ``` getTmpMedia($media_id) ```
 
-获取永久素材,使用 ``` get_media($media_id) ```
+获取永久素材,使用 ``` getMedia($media_id) ```
 
 两个接口的返回都是数据直接返回
 
@@ -90,10 +90,10 @@ object(stdClass)[131]
 
 获取一个永久素材
 ```
-$response_data =  $ec_wechat->get_media('media_id');
+$response_data =  $wp_wechat->getMedia('media_id');
 
 // 通过指定content_type让内容直接呈现
-$header = $ec_wechat->get_last_header();
+$header = $wp_wechat->get_last_header();
 header('Content-Type:'.$header['content_type']);
 
 echo $response_data;
@@ -104,14 +104,14 @@ echo $response_data;
 
 > http://mp.weixin.qq.com/wiki/5/e66f61c303db51a6c0f90f46b15af5f5.html
 
-使用 ``` delete_media($media_id) ``` 删除永久素材
+使用 ``` deleteMedia($media_id) ``` 删除永久素材
 
 
 ##修改永久图文素材
 
 > http://mp.weixin.qq.com/wiki/4/19a59cba020d506e767360ca1be29450.html
 
-使用 ``` update_news($media_id, $index, $article) ``` 修改永久图文素材
+使用 ``` updateNews($media_id, $index, $article) ``` 修改永久图文素材
 
 例子:
 
@@ -119,9 +119,9 @@ echo $response_data;
 
 ```
 //php
-$ec_wechat = new EC_Wechat();
+$wp_wechat = new WP_Wechat();
 
-$response =  json_decode($ec_wechat->get_media('yds-iFh02pkQGwFMCX0eGYvakDPEnjLLlhKT69WY-rM'));
+$response =  json_decode($wp_wechat->getMedia('yds-iFh02pkQGwFMCX0eGYvakDPEnjLLlhKT69WY-rM'));
 
 var_dump($re);
 
@@ -165,7 +165,7 @@ $article = array(
     "content_source_url" => 'http://www.baidu.com'
 );
 
-$response = $ec_wechat->update_news('yds-iFh02pkQGwFMCX0eGYvakDPEnjLLlhKT69WY-rM', 0, $article);
+$response = $wp_wechat->updateNews('yds-iFh02pkQGwFMCX0eGYvakDPEnjLLlhKT69WY-rM', 0, $article);
 ```
 
 图文变成
@@ -199,9 +199,9 @@ object(stdClass)[1864]
 
 ##获取素材总数
 
-使用 ``` get_material_count() ``` 获取素材总数
+使用 ``` getMaterialCount() ``` 获取素材总数
 
 
 ##获取素材列表
 
-使用 ``` get_material_list($type, $offset, $count) ``` 获取素材列表
+使用 ``` getMaterialList($type, $offset, $count) ``` 获取素材列表
