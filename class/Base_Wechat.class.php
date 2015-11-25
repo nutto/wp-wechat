@@ -62,7 +62,6 @@ class Base_Wechat {
         $this->token_expire = $token_expire;
         $this->token_modified_time = $token_modified_time;
         $this->app_confirm_identify = $app_confirm_identify;
-
         // 20151109:确保Access Token的有效性
         $this->ensureAccessToken();
     }
@@ -1320,8 +1319,7 @@ class Base_Wechat {
      */
     public function csGetList() {
         return json_decode($this->_requestApi(
-            $this->_addQueryArg(array(
-                'access_token'  => $this->access_token,
+            $this->_addQueryArg(array('access_token'  => $this->access_token,
             ),'https://api.weixin.qq.com/cgi-bin/customservice/getkflist')
         ));
     }

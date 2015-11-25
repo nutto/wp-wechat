@@ -1,4 +1,6 @@
-<?php $wx = new WP_Wechat();
+<?php
+$wx = new WP_Wechat();
+
 if($_POST) {
     switch($_POST['wechat_action']) {
         case 'update_menu':
@@ -12,12 +14,8 @@ if($_POST) {
             break;
     }
 }
+
 ?>
-<style type="text/css">
-    #menu-block, #menu-setting { padding: 1em 1.5em;  }
-    #menu-block .min-menu { margin-left: 1em; }
-    #menu-block .plus-sub-menu { margin-left: 1em; }
-</style>
 
 <div class="wrap">
     <h2><?php _e('Wechat Settings', 'wp_wechat'); ?></h2>

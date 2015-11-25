@@ -38,13 +38,19 @@ add_action('plugins_loaded', function() {
 add_action('admin_menu', function () {
 
     // 注册配置页面的渲染函数和信息
-    add_options_page(
+    $page = add_options_page(
         __('Wechat Options', WXD),                  // page_title
         __('Wechat Options', WXD),                  // menu_title
         'manage_options',                           // capability
         'options-wechat',                           // menu_slug
         'wechat_plugin_options'                     // function (callback)
     );
+
+    // 添加CSS文件
+    add_action('admin_print_styles-' . $page, function () {
+        wp_register_style( 'wp-wechat', plugins_url( 'wp-wechat/css/style.css' ), array(), 1);
+        wp_enqueue_style( 'wp-wechat', plugins_url( 'wp-wechat/css/style.css' ), array(), 1 );
+    });
 
     function wechat_plugin_options() {
         include_once 'option-page.php';
